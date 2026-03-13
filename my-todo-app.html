@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My To-Do App</title>
+  <style>
+    /* ── Base & Dark Mode ── */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f2f5;
+      color: #222;
+      min-height: 100vh;
+      transition: background 0.3s, color 0.3s;
+      padding: 40px 16px;
+    }
+    body.dark {
+      background: #1a1a2e;
+      color: #f0f0f0;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: white;
+      max-width: 520px;
+      margin: 0 auto;
+      border-radius: 16px;
+      padding: 32px 28px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+    body.dark .card {
+      background: #16213e;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    h1 {
+      font-size: 26px;
+      font-weight: 700;
+      color: #4CAF50;
+    }
+    body.dark h1 { color: #6ee06e; }
+
+    #darkBtn {
+      background: transparent;
+      border: 2px solid #ccc;
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 14px;
+      cursor: pointer;
+      color: inherit;
+      transition: all 0.2s;
+    }
+    #darkBtn:hover { border-color: #4CAF50; color: #4CAF50; }
+
+    /* ── Counter & Progress ── */
+    #counter {
+      font-size: 13px;
+      color: #888;
+      margin-bottom: 8px;
+    }
+    body.dark #counter { color: #aaa; }
+
+    .progress-bar-bg {
+      background: #e0e0e0;
+      border-radius: 10px;
+      height: 10px;
+      margin-bottom: 24px;
+      overflow: hidden;
+    }
+    body.dark .progress-bar-bg { background: #2a2a4a; }
+
+    #progressBar {
+      background: linear-gradient(90deg, #4CAF50, #81C784);
+      height: 10px;
+      border-radius: 10px;
+      width: 0%;
+      transition: width 0.4s ease;
+    }
+
+    /* ── Input Row ── */
+    .input-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    #taskInput {
+      flex: 1;
+      padding: 12px 16px;
+      font-size: 15px;
+      border: 2px solid #ddd;
+      border-radius: 10px;
+      outline: none;
+      background: white;
+      color: #222;
+      transition: border-color 0.2s, background 0.3s, color 0.3s;
+    }
+    body.dark #taskInput {
+      background: #0f3460;
+      border-color: #2a2a6a;
+      color: #f0f0f0;
+    }
+    #taskInput:focus { border-color: #4CAF50; }
+    #taskInput::placeholder { color: #aaa; }
+
+    #addBtn {
+      padding: 12px 20px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s;
+      white-space: nowrap;
+    }
+    #addBtn:hover  { background: #43a047; transform: translateY(-1px); }
+    #addBtn:active { transform: translateY(0); }
+
+    /* ── Empty State ── */
+    #emptyMsg {
+      display: block;
+      text-align: center;
+      color: #aaa;
+      font-size: 15px;
+      padding: 32px 0;
+    }
+    body.dark #emptyMsg { color: #666; }
+
+    /* ── Task List ── */
+    #taskList { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+
+    #taskList li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #f9f9f9;
+      border: 1.5px solid #eee;
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 15px;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s, opacity 0.2s;
+      animation: slideIn 0.3s ease both;
+    }
+    body.dark #taskList li {
+      background: #0f3460;
+      border-color: #1a4a8a;
+      color: #f0f0f0;
+    }
+    #taskList li:hover { border-color: #4CAF50; }
+    #taskList li.done {
+      opacity: 0.55;
+      text-decoration: line-through;
+      background: #f0f7f0;
+    }
+    body.dark #taskList li.done { background: #0a2a1a; }
+
+    /* Slide-in animation */
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-18px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    /* Slide-out animation */
+    @keyframes slideOut {
+      from { opacity: 1; transform: translateX(0); max-height: 80px; }
+      to   { opacity: 0; transform: translateX(20px); max-height: 0; padding: 0; margin: 0; }
+    }
+    #taskList li.removing {
+      animation: slideOut 0.28s ease forwards;
+      overflow: hidden;
+    }
+
+    /* Checkbox circle */
+    .check-circle {
+      width: 22px; height: 22px;
+      border: 2px solid #ccc;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+    li.done .check-circle {
+      background: #4CAF50;
+      border-color: #4CAF50;
+      color: white;
+    }
+
+    /* Task text */
+    .task-text { flex: 1; word-break: break-word; }
+
+    /* Delete button */
+    .del-btn {
+      background: transparent;
+      border: none;
+      font-size: 18px;
+      color: #ccc;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 6px;
+      line-height: 1;
+      transition: color 0.2s, background 0.2s;
+      flex-shrink: 0;
+    }
+    .del-btn:hover { color: #e53935; background: rgba(229,57,53,0.1); }
+  </style>
+</head>
+<body>
+
+<div class="card">
+
+  <!-- Header -->
+  <div class="header">
+    <h1>📝 My Tasks</h1>
+    <button id="darkBtn" onclick="toggleDark()">🌙 Dark Mode</button>
+  </div>
+
+  <!-- Counter & Progress Bar -->
+  <p id="counter">0 of 0 tasks completed</p>
+  <div class="progress-bar-bg">
+    <div id="progressBar"></div>
+  </div>
+
+  <!-- Input -->
+  <div class="input-row">
+    <input
+      type="text"
+      id="taskInput"
+      placeholder="Type a task and press Enter..."
+      onkeydown="if(event.key === 'Enter') addTask()"
+      maxlength="100"
+    />
+    <button id="addBtn" onclick="addTask()">+ Add</button>
+  </div>
+
+  <!-- Empty State -->
+  <p id="emptyMsg">Nothing to do! 🎉 Add a task above.</p>
+
+  <!-- Task List -->
+  <ul id="taskList"></ul>
+
+</div>
+
+<script>
+  // ── Load saved tasks from localStorage on page open ──
+  window.onload = function() {
+    let saved = JSON.parse(localStorage.getItem("myTasks") || "[]");
+    saved.forEach(function(task) {
+      createTaskElement(task.text, task.done);
+    });
+    updateProgress();
+    updateEmptyState();
+  };
+
+  // ── Add a new task ──
+  function addTask() {
+    let input = document.getElementById("taskInput");
+    let text = input.value.trim();
+
+    if (text === "") {
+      input.style.borderColor = "#e53935";
+      setTimeout(function() { input.style.borderColor = ""; }, 600);
+      input.focus();
+      return;
+    }
+
+    createTaskElement(text, false);
+    input.value = "";
+    input.focus();
+    saveTasks();
+    updateProgress();
+    updateEmptyState();
+  }
+
+  // ── Create a task <li> element ──
+  function createTaskElement(text, isDone) {
+    let list = document.getElementById("taskList");
+
+    let li = document.createElement("li");
+    if (isDone) li.classList.add("done");
+
+    // Checkbox circle
+    let check = document.createElement("div");
+    check.className = "check-circle";
+    check.textContent = isDone ? "✓" : "";
+
+    // Task text
+    let span = document.createElement("span");
+    span.className = "task-text";
+    span.textContent = text;
+
+    // Delete button
+    let delBtn = document.createElement("button");
+    delBtn.className = "del-btn";
+    delBtn.textContent = "×";
+    delBtn.title = "Delete task";
+    delBtn.onclick = function(e) {
+      e.stopPropagation(); // don't toggle done when clicking delete
+      li.classList.add("removing");
+      setTimeout(function() {
+        li.remove();
+        saveTasks();
+        updateProgress();
+        updateEmptyState();
+      }, 280);
+    };
+
+    // Toggle done on click
+    li.onclick = function() {
+      li.classList.toggle("done");
+      check.textContent = li.classList.contains("done") ? "✓" : "";
+      saveTasks();
+      updateProgress();
+    };
+
+    li.appendChild(check);
+    li.appendChild(span);
+    li.appendChild(delBtn);
+    list.appendChild(li);
+  }
+
+  // ── Save all tasks to localStorage ──
+  function saveTasks() {
+    let items = document.querySelectorAll("#taskList li");
+    let tasks = [];
+    items.forEach(function(li) {
+      tasks.push({
+        text: li.querySelector(".task-text").textContent,
+        done: li.classList.contains("done")
+      });
+    });
+    localStorage.setItem("myTasks", JSON.stringify(tasks));
+  }
+
+  // ── Update progress bar and counter ──
+  function updateProgress() {
+    let items = document.querySelectorAll("#taskList li");
+    let total = items.length;
+    let done = document.querySelectorAll("#taskList li.done").length;
+    let pct = total === 0 ? 0 : Math.round((done / total) * 100);
+
+    document.getElementById("counter").textContent =
+      done + " of " + total + " tasks completed";
+    document.getElementById("progressBar").style.width = pct + "%";
+  }
+
+  // ── Show/hide empty state message ──
+  function updateEmptyState() {
+    let items = document.querySelectorAll("#taskList li");
+    document.getElementById("emptyMsg").style.display =
+      items.length === 0 ? "block" : "none";
+  }
+
+  // ── Dark mode toggle ──
+  function toggleDark() {
+    document.body.classList.toggle("dark");
+    let btn = document.getElementById("darkBtn");
+    let isDark = document.body.classList.contains("dark");
+    btn.textContent = isDark ? "☀️ Light Mode" : "🌙 Dark Mode";
+  }
+</script>
+
+</body>
+</html>
